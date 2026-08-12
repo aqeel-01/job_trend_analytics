@@ -1,0 +1,38 @@
+{
+  "data": [
+    {
+      "slug": "software-engineer-berlin-123",
+      "company_name": "Example Corp",
+      "title": "Software Engineer",
+      "description": "<p>Build APIs with Python.</p>",
+      "remote": true,
+      "url": "https://example.com/jobs/123",
+      "tags": ["Python", "Backend"],
+      "job_types": ["Full-time"],
+      "location": "Berlin",
+      "created_at": 1704067200
+    },
+    {
+      "slug": "data-engineer-remote-456",
+      "company_name": "Data Co",
+      "title": "Data Engineer",
+      "description": "<p>Work with Spark and SQL.</p>",
+      "remote": false,
+      "url": "https://example.com/jobs/456",
+      "tags": ["Spark"],
+      "job_types": ["Full-time"],
+      "location": "Munich",
+      "created_at": 1704153600
+    }
+  ],
+  "links": {
+    "first": "https://www.arbeitnow.com/api/job-board-api?page=1",
+    "last": null,
+    "prev": null,
+    "next": null
+  },
+  "meta": {
+    "current_page": 1,
+    "per_page": 2
+  }
+}

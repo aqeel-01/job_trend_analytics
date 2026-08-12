@@ -1,0 +1,107 @@
+# --- Python ---
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# --- Virtual environments ---
+.venv/
+venv/
+env/
+.env.bak/
+
+# --- Environment and secrets ---
+.env
+.env.*
+!.env.example
+
+# Credentials and local secrets
+*.pem
+*.key
+secrets/
+credentials.json
+credentials.*.json
+
+# --- Distribution / packaging ---
+build/
+dist/
+develop-eggs/
+downloads/
+eggs/
+.eggs/
+sdist/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+pip-wheel-metadata/
+pip-log.txt
+pip-delete-this-directory.txt
+
+# --- Testing / coverage ---
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+
+# --- Type checkers / linters ---
+.mypy_cache/
+.dmypy.json
+dmypy.json
+.pyre/
+.pytype/
+.ruff_cache/
+
+# --- Jupyter ---
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+
+# --- IDE / editors ---
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+*.swp
+*.swo
+*~
+.cursor/
+
+# --- OS ---
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# --- Project data (local runtime) ---
+data/*.db
+data/*.db-*
+data/*.sqlite
+data/*.sqlite3
+logs/
+*.log
+
+# --- ML / experiment artifacts (future phases) ---
+mlruns/
+models/
+reports/
+artifacts/
+experiments/
+
+# --- Containers (future phases) ---
+docker-compose.override.yml
+
+# doc
+srs.md

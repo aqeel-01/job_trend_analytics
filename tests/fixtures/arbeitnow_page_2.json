@@ -1,0 +1,20 @@
+{
+  "data": [
+    {
+      "slug": "backend-dev-789",
+      "company_name": "Page Two Inc",
+      "title": "Backend Developer",
+      "description": "<p>Node.js services.</p>",
+      "remote": null,
+      "url": "https://example.com/jobs/789",
+      "location": "Hamburg",
+      "created_at": 1704240000
+    }
+  ],
+  "links": {
+    "next": null
+  },
+  "meta": {
+    "current_page": 2
+  }
+}
