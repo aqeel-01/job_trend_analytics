@@ -239,6 +239,24 @@ class SkillRepository:
             created_at=_str_to_datetime(row["created_at"]),
         )
 
+    def get_or_create_by_canonical(
+        self,
+        canonical_name: str,
+        category: str | None = None,
+        skill_name: str | None = None,
+    ) -> int:
+        """Return skill ID, creating the taxonomy row when missing."""
+        existing = self.get_by_canonical_name(canonical_name)
+        if existing is not None:
+            return existing.id
+
+        resolved_skill_name = skill_name or canonical_name
+        return self.create(
+            skill_name=resolved_skill_name,
+            canonical_name=canonical_name,
+            category=category,
+        )
+
     def list_skills(self, limit: int = 100, offset: int = 0) -> list[StoredSkill]:
         """List skills ordered by canonical name."""
         conn = self.database.connect()

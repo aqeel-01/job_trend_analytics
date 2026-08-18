@@ -1,0 +1,181 @@
+{
+  "version": "1.0",
+  "description": "V1 skill taxonomy for job market intelligence pipeline",
+  "skills": [
+    {
+      "canonical_name": "Python",
+      "category": "programming_language",
+      "aliases": ["python", "py"]
+    },
+    {
+      "canonical_name": "Java",
+      "category": "programming_language",
+      "aliases": ["java"]
+    },
+    {
+      "canonical_name": "JavaScript",
+      "category": "programming_language",
+      "aliases": ["javascript", "js", "ecmascript"]
+    },
+    {
+      "canonical_name": "TypeScript",
+      "category": "programming_language",
+      "aliases": ["typescript", "ts"]
+    },
+    {
+      "canonical_name": "C++",
+      "category": "programming_language",
+      "aliases": ["c++", "cpp", "cplusplus", "c plus plus"]
+    },
+    {
+      "canonical_name": "SQL",
+      "category": "database",
+      "aliases": ["sql", "structured query language"]
+    },
+    {
+      "canonical_name": "PostgreSQL",
+      "category": "database",
+      "aliases": ["postgresql", "postgres", "postgre"]
+    },
+    {
+      "canonical_name": "MySQL",
+      "category": "database",
+      "aliases": ["mysql", "my sql"]
+    },
+    {
+      "canonical_name": "MongoDB",
+      "category": "database",
+      "aliases": ["mongodb", "mongo"]
+    },
+    {
+      "canonical_name": "AWS",
+      "category": "cloud",
+      "aliases": ["aws", "amazon web services", "amazon aws"]
+    },
+    {
+      "canonical_name": "Azure",
+      "category": "cloud",
+      "aliases": ["azure", "microsoft azure", "ms azure"]
+    },
+    {
+      "canonical_name": "GCP",
+      "category": "cloud",
+      "aliases": ["gcp", "google cloud", "google cloud platform"]
+    },
+    {
+      "canonical_name": "Docker",
+      "category": "devops",
+      "aliases": ["docker", "docker container", "docker containers"]
+    },
+    {
+      "canonical_name": "Kubernetes",
+      "category": "devops",
+      "aliases": ["kubernetes", "k8s", "kube", "k8"]
+    },
+    {
+      "canonical_name": "Git",
+      "category": "tooling",
+      "aliases": ["git", "git version control"]
+    },
+    {
+      "canonical_name": "Linux",
+      "category": "devops",
+      "aliases": ["linux", "gnu/linux", "unix linux"]
+    },
+    {
+      "canonical_name": "FastAPI",
+      "category": "web_framework",
+      "aliases": ["fastapi", "fast api", "fast-api"]
+    },
+    {
+      "canonical_name": "Django",
+      "category": "web_framework",
+      "aliases": ["django", "django framework"]
+    },
+    {
+      "canonical_name": "React",
+      "category": "web_framework",
+      "aliases": ["react", "reactjs", "react.js", "react js"]
+    },
+    {
+      "canonical_name": "Node.js",
+      "category": "web_framework",
+      "aliases": ["node.js", "nodejs", "node js", "node"]
+    },
+    {
+      "canonical_name": "Angular",
+      "category": "web_framework",
+      "aliases": ["angular", "angular framework"]
+    },
+    {
+      "canonical_name": "TensorFlow",
+      "category": "ml_library",
+      "aliases": ["tensorflow", "tf", "tensor flow"]
+    },
+    {
+      "canonical_name": "PyTorch",
+      "category": "ml_library",
+      "aliases": ["pytorch", "torch", "py torch"]
+    },
+    {
+      "canonical_name": "Scikit-learn",
+      "category": "ml_library",
+      "aliases": ["scikit-learn", "scikit learn", "sklearn", "sci-kit learn"]
+    },
+    {
+      "canonical_name": "Pandas",
+      "category": "data_engineering",
+      "aliases": ["pandas", "pandas python"]
+    },
+    {
+      "canonical_name": "Spark",
+      "category": "data_engineering",
+      "aliases": ["spark", "apache spark", "pyspark", "py spark"]
+    },
+    {
+      "canonical_name": "Airflow",
+      "category": "data_engineering",
+      "aliases": ["airflow", "apache airflow"]
+    },
+    {
+      "canonical_name": "Kafka",
+      "category": "data_engineering",
+      "aliases": ["kafka", "apache kafka"]
+    },
+    {
+      "canonical_name": "LangChain",
+      "category": "ai_agent",
+      "aliases": ["langchain", "lang chain"]
+    },
+    {
+      "canonical_name": "LangGraph",
+      "category": "ai_agent",
+      "aliases": ["langgraph", "lang graph"]
+    },
+    {
+      "canonical_name": "Machine Learning",
+      "category": "ml_domain",
+      "aliases": ["machine learning", "ml", "machine-learning"]
+    },
+    {
+      "canonical_name": "Deep Learning",
+      "category": "ml_domain",
+      "aliases": ["deep learning", "dl", "deep-learning"]
+    },
+    {
+      "canonical_name": "NLP",
+      "category": "ml_domain",
+      "aliases": ["nlp", "natural language processing", "natural-language processing"]
+    },
+    {
+      "canonical_name": "LLM",
+      "category": "ml_domain",
+      "aliases": ["llm", "large language model", "large language models", "llms"]
+    },
+    {
+      "canonical_name": "Generative AI",
+      "category": "ml_domain",
+      "aliases": ["generative ai", "genai", "gen ai", "generative artificial intelligence"]
+    }
+  ]
+}

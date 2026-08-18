@@ -1,0 +1,39 @@
+{
+  "version": "1.0",
+  "description": "Manual evaluation dataset for V1 skill extraction quality assessment.",
+  "target_sample_count": "20-50",
+  "labeling_instructions": "Review each job description and add canonical skill names from data/skills_taxonomy.json to labeled_skills. Do not use aliases in labels; use canonical names only.",
+  "metrics": ["precision", "recall", "f1"],
+  "samples": [
+    {
+      "id": "eval-001",
+      "description": "We are seeking a backend engineer with experience in Python, Docker, and AWS. You will build APIs and deploy containerized services.",
+      "labeled_skills": [],
+      "notes": "Pending manual review."
+    },
+    {
+      "id": "eval-002",
+      "description": "Senior data engineer role working with Spark, Kafka, Airflow, and SQL pipelines on GCP.",
+      "labeled_skills": [],
+      "notes": "Pending manual review."
+    },
+    {
+      "id": "eval-003",
+      "description": "Frontend developer with strong React and TypeScript skills. Familiarity with Node.js is a plus.",
+      "labeled_skills": [],
+      "notes": "Pending manual review."
+    },
+    {
+      "id": "eval-004",
+      "description": "ML engineer position focusing on PyTorch, TensorFlow, NLP, and LLM applications using LangChain.",
+      "labeled_skills": [],
+      "notes": "Pending manual review."
+    },
+    {
+      "id": "eval-005",
+      "description": "Platform engineer maintaining Kubernetes clusters on Linux with Git-based CI/CD workflows.",
+      "labeled_skills": [],
+      "notes": "Pending manual review."
+    }
+  ]
+}

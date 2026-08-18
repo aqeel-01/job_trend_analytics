@@ -49,6 +49,10 @@ class Settings(BaseSettings):
         default=None,
         description="Default maximum pages to fetch per ingestion run (None = all pages).",
     )
+    skills_taxonomy_path: Path = Field(
+        default=PROJECT_ROOT / "data" / "skills_taxonomy.json",
+        description="Path to the V1 skill taxonomy JSON configuration.",
+    )
 
     @property
     def database_url(self) -> str:
@@ -67,4 +71,6 @@ def get_settings() -> Settings:
         settings.database_path = PROJECT_ROOT / settings.database_path
     if settings.log_file is not None and not settings.log_file.is_absolute():
         settings.log_file = PROJECT_ROOT / settings.log_file
+    if not settings.skills_taxonomy_path.is_absolute():
+        settings.skills_taxonomy_path = PROJECT_ROOT / settings.skills_taxonomy_path
     return settings
