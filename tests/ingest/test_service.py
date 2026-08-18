@@ -1,15 +1,10 @@
 """Tests for ingestion service orchestration."""
 
 import json
-from datetime import datetime, timezone
 from pathlib import Path
-from unittest.mock import MagicMock
-
-import pytest
 
 from pipeline.ingest.exceptions import APIRequestError
 from pipeline.ingest.service import IngestionService
-from pipeline.ingest.storage import JobStorage
 
 
 FIXTURES = Path(__file__).parent.parent / "fixtures"
@@ -34,11 +29,19 @@ class MockJobBoardClient:
         return self.pages[page]
 
 
-def test_ingestion_service_inserts_jobs(test_settings) -> None:
+def _build_service(client, job_repository, pipeline_run_repository, database):
+    return IngestionService(
+        client=client,
+        job_repository=job_repository,
+        pipeline_run_repository=pipeline_run_repository,
+        database=database,
+    )
+
+
+def test_ingestion_service_inserts_jobs(job_repository, pipeline_run_repository, database) -> None:
     page_one = _load_fixture("arbeitnow_page.json")
-    storage = JobStorage(test_settings.database_path)
     client = MockJobBoardClient({1: page_one})
-    service = IngestionService(client=client, storage=storage)
+    service = _build_service(client, job_repository, pipeline_run_repository, database)
 
     result = service.run()
 
@@ -48,16 +51,14 @@ def test_ingestion_service_inserts_jobs(test_settings) -> None:
     assert result.records_inserted == 2
     assert result.records_duplicates == 0
     assert result.records_failed == 0
-    assert storage.count_jobs() == 2
+    assert job_repository.count_jobs() == 2
+    assert pipeline_run_repository.count_runs() == 1
 
-    storage.close()
 
-
-def test_ingestion_service_skips_duplicates(test_settings) -> None:
+def test_ingestion_service_skips_duplicates(job_repository, pipeline_run_repository, database) -> None:
     page_one = _load_fixture("arbeitnow_page.json")
-    storage = JobStorage(test_settings.database_path)
     client = MockJobBoardClient({1: page_one})
-    service = IngestionService(client=client, storage=storage)
+    service = _build_service(client, job_repository, pipeline_run_repository, database)
 
     first = service.run()
     second = service.run()
@@ -65,19 +66,16 @@ def test_ingestion_service_skips_duplicates(test_settings) -> None:
     assert first.records_inserted == 2
     assert second.records_inserted == 0
     assert second.records_duplicates == 2
-    assert storage.count_jobs() == 2
-
-    storage.close()
+    assert job_repository.count_jobs() == 2
 
 
-def test_ingestion_service_paginates(test_settings) -> None:
+def test_ingestion_service_paginates(job_repository, pipeline_run_repository, database) -> None:
     page_one = _load_fixture("arbeitnow_page.json")
     page_two = _load_fixture("arbeitnow_page_2.json")
     page_one["links"]["next"] = "https://www.arbeitnow.com/api/job-board-api?page=2"
 
-    storage = JobStorage(test_settings.database_path)
     client = MockJobBoardClient({1: page_one, 2: page_two})
-    service = IngestionService(client=client, storage=storage)
+    service = _build_service(client, job_repository, pipeline_run_repository, database)
 
     result = service.run()
 
@@ -85,14 +83,13 @@ def test_ingestion_service_paginates(test_settings) -> None:
     assert result.records_inserted == 3
     assert client.calls == [1, 2]
 
-    storage.close()
 
-
-def test_ingestion_service_handles_api_failure(test_settings) -> None:
+def test_ingestion_service_handles_api_failure(
+    job_repository, pipeline_run_repository, database
+) -> None:
     page_one = _load_fixture("arbeitnow_page.json")
-    storage = JobStorage(test_settings.database_path)
     client = MockJobBoardClient({1: page_one}, fail_page=1)
-    service = IngestionService(client=client, storage=storage)
+    service = _build_service(client, job_repository, pipeline_run_repository, database)
 
     result = service.run()
 
@@ -100,18 +97,18 @@ def test_ingestion_service_handles_api_failure(test_settings) -> None:
     assert result.pages_fetched == 0
     assert result.records_inserted == 0
     assert result.error_message is not None
+    assert pipeline_run_repository.count_runs() == 1
 
-    storage.close()
 
-
-def test_ingestion_service_max_pages_limit(test_settings) -> None:
+def test_ingestion_service_max_pages_limit(
+    job_repository, pipeline_run_repository, database
+) -> None:
     page_one = _load_fixture("arbeitnow_page.json")
     page_two = _load_fixture("arbeitnow_page_2.json")
     page_one["links"]["next"] = "https://www.arbeitnow.com/api/job-board-api?page=2"
 
-    storage = JobStorage(test_settings.database_path)
     client = MockJobBoardClient({1: page_one, 2: page_two})
-    service = IngestionService(client=client, storage=storage)
+    service = _build_service(client, job_repository, pipeline_run_repository, database)
 
     result = service.run(max_pages=1)
 
@@ -119,10 +116,10 @@ def test_ingestion_service_max_pages_limit(test_settings) -> None:
     assert result.records_inserted == 2
     assert client.calls == [1]
 
-    storage.close()
 
-
-def test_ingestion_service_normalization_failure(test_settings) -> None:
+def test_ingestion_service_normalization_failure(
+    job_repository, pipeline_run_repository, database
+) -> None:
     payload = {
         "data": [
             {"slug": "bad", "company_name": "Co"},
@@ -130,9 +127,8 @@ def test_ingestion_service_normalization_failure(test_settings) -> None:
         ],
         "links": {"next": None},
     }
-    storage = JobStorage(test_settings.database_path)
     client = MockJobBoardClient({1: payload})
-    service = IngestionService(client=client, storage=storage)
+    service = _build_service(client, job_repository, pipeline_run_repository, database)
 
     result = service.run()
 
@@ -140,5 +136,3 @@ def test_ingestion_service_normalization_failure(test_settings) -> None:
     assert result.records_failed == 1
     assert result.records_inserted == 1
     assert result.status == "completed"
-
-    storage.close()

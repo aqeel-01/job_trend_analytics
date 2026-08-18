@@ -7,7 +7,8 @@ from pipeline.ingest.client import JobBoardClient
 from pipeline.ingest.exceptions import APIRequestError, NormalizationError
 from pipeline.ingest.models import IngestionResult
 from pipeline.ingest.normalizer import normalize_arbeitnow_job
-from pipeline.ingest.storage import JobStorage
+from pipeline.storage.database import Database
+from pipeline.storage.repositories import JobRepository, PipelineRunRepository
 
 logger = logging.getLogger(__name__)
 
@@ -15,9 +16,17 @@ logger = logging.getLogger(__name__)
 class IngestionService:
     """Fetch jobs from a job board client and persist them to storage."""
 
-    def __init__(self, client: JobBoardClient, storage: JobStorage) -> None:
+    def __init__(
+        self,
+        client: JobBoardClient,
+        job_repository: JobRepository,
+        pipeline_run_repository: PipelineRunRepository,
+        database: Database | None = None,
+    ) -> None:
         self.client = client
-        self.storage = storage
+        self.job_repository = job_repository
+        self.pipeline_run_repository = pipeline_run_repository
+        self.database = database or job_repository.database
 
     def run(self, max_pages: int | None = None) -> IngestionResult:
         """Execute a full ingestion run with optional page limit."""
@@ -25,7 +34,7 @@ class IngestionService:
         result = IngestionResult()
         page = 1
 
-        self.storage.init_schema()
+        self.database.initialize()
 
         while True:
             if max_pages is not None and page > max_pages:
@@ -63,8 +72,8 @@ class IngestionService:
                 result.records_fetched += 1
                 try:
                     job = normalize_arbeitnow_job(raw_job, ingested_at=ingested_at)
-                    inserted = self.storage.insert_job(job)
-                    if inserted:
+                    insert_result = self.job_repository.insert_job(job)
+                    if insert_result.inserted:
                         result.records_inserted += 1
                     else:
                         result.records_duplicates += 1
@@ -84,7 +93,11 @@ class IngestionService:
             result.status = "completed_with_errors"
 
         completed_at = datetime.now(timezone.utc)
-        self.storage.record_pipeline_run(started_at, completed_at, result)
+        self.pipeline_run_repository.create_from_ingestion_result(
+            started_at,
+            completed_at,
+            result,
+        )
 
         logger.info(
             "Ingestion finished: status=%s fetched=%s inserted=%s duplicates=%s failed=%s pages=%s",

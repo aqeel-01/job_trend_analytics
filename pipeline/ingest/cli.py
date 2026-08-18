@@ -2,13 +2,13 @@
 
 import argparse
 import logging
-import sys
 
 from pipeline import initialize
 from pipeline.config.settings import get_settings
 from pipeline.ingest.client import ArbeitnowClient
 from pipeline.ingest.service import IngestionService
-from pipeline.ingest.storage import JobStorage
+from pipeline.storage.database import Database
+from pipeline.storage.repositories import JobRepository, PipelineRunRepository
 
 logger = logging.getLogger(__name__)
 
@@ -50,13 +50,20 @@ def main(argv: list[str] | None = None) -> int:
         timeout_seconds=settings.ingest_request_timeout_seconds,
         max_retries=settings.ingest_max_retries,
     )
-    storage = JobStorage(settings.database_path)
-    service = IngestionService(client=client, storage=storage)
+    database = Database(settings.database_path)
+    job_repository = JobRepository(database)
+    pipeline_run_repository = PipelineRunRepository(database)
+    service = IngestionService(
+        client=client,
+        job_repository=job_repository,
+        pipeline_run_repository=pipeline_run_repository,
+        database=database,
+    )
 
     try:
         result = service.run(max_pages=max_pages)
     finally:
-        storage.close()
+        database.close()
 
     if result.status == "failed":
         logger.error("Ingestion failed: %s", result.error_message)
