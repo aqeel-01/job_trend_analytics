@@ -9,9 +9,11 @@ description = "AI-Powered Job Market & Skill Demand Intelligence Pipeline (V1)"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
+    "fastapi>=0.115",
     "httpx>=0.27",
     "pydantic>=2.0",
     "pydantic-settings>=2.0",
+    "uvicorn[standard]>=0.30",
 ]
 
 [project.optional-dependencies]

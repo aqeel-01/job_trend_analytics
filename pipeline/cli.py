@@ -28,6 +28,10 @@ def build_parser() -> argparse.ArgumentParser:
     subparsers = parser.add_subparsers(dest="command", help="Available commands")
 
     subparsers.add_parser("info", help="Show application configuration summary.")
+    subparsers.add_parser(
+        "extract",
+        help="Extract skills from stored jobs and populate job_skills table.",
+    )
 
     return parser
 
@@ -55,6 +59,10 @@ def main(argv: list[str] | None = None) -> int:
     if args.command == "info":
         cmd_info()
         return 0
+
+    if args.command == "extract":
+        from pipeline.extraction.cli import main as extract_main
+        return extract_main([])
 
     if args.command is None:
         parser.print_help()
