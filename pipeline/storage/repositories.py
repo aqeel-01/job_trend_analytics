@@ -354,6 +354,12 @@ class JobSkillRepository:
         ).fetchone()
         return int(row["count"])
 
+    def count_links(self) -> int:
+        """Return total number of job-skill links."""
+        conn = self.database.connect()
+        row = conn.execute("SELECT COUNT(*) AS count FROM job_skills").fetchone()
+        return int(row["count"])
+
 
 class PipelineRunRepository:
     """CRUD operations for pipeline run metadata."""

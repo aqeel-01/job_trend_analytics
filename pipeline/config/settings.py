@@ -54,6 +54,23 @@ class Settings(BaseSettings):
         description="Path to the V1 skill taxonomy JSON configuration.",
     )
 
+    ollama_base_url: str = Field(
+        default="http://localhost:11434",
+        description="Base URL for the local Ollama API.",
+    )
+    ollama_model: str = Field(
+        default="llama3",
+        description="Ollama model name for report generation.",
+    )
+    ollama_timeout_seconds: float = Field(
+        default=120.0,
+        description="Timeout for Ollama generation requests.",
+    )
+    report_output_dir: Path = Field(
+        default=PROJECT_ROOT / "reports",
+        description="Directory for generated weekly reports.",
+    )
+
     @property
     def database_url(self) -> str:
         """SQLite connection URL for SQLAlchemy or similar drivers."""

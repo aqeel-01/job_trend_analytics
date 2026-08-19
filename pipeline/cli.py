@@ -32,6 +32,22 @@ def build_parser() -> argparse.ArgumentParser:
         "extract",
         help="Extract skills from stored jobs and populate job_skills table.",
     )
+    subparsers.add_parser(
+        "monitor",
+        help="Run the V1 Monitor Agent workflow.",
+    )
+    subparsers.add_parser(
+        "analyst",
+        help="Run the V1 Analyst Agent workflow.",
+    )
+    subparsers.add_parser(
+        "report",
+        help="Run the V1 Report Writer Agent workflow.",
+    )
+    subparsers.add_parser(
+        "run",
+        help="Run the full V1 pipeline orchestrator (Monitor → Analyst → Report).",
+    )
 
     return parser
 
@@ -63,6 +79,22 @@ def main(argv: list[str] | None = None) -> int:
     if args.command == "extract":
         from pipeline.extraction.cli import main as extract_main
         return extract_main([])
+
+    if args.command == "monitor":
+        from pipeline.agents.monitor.cli import main as monitor_main
+        return monitor_main([])
+
+    if args.command == "analyst":
+        from pipeline.agents.analyst.cli import main as analyst_main
+        return analyst_main([])
+
+    if args.command == "report":
+        from pipeline.agents.report_writer.cli import main as report_main
+        return report_main([])
+
+    if args.command == "run":
+        from pipeline.agents.orchestrator.cli import main as orchestrator_main
+        return orchestrator_main([])
 
     if args.command is None:
         parser.print_help()
