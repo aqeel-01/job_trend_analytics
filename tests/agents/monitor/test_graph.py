@@ -97,7 +97,7 @@ class TestEvaluateNode:
 
 
 class TestRunMonitor:
-    @patch("pipeline.agents.monitor.tools.check_fastapi_health")
+    @patch("pipeline.agents.monitor.graph.check_fastapi_health")
     def test_healthy_workflow(self, mock_api, tmp_database):
         mock_api.return_value = {"healthy": True, "status_code": 200, "body": {}, "detail": "ok"}
         _insert_run(tmp_database, hours_ago=2)
@@ -111,7 +111,7 @@ class TestRunMonitor:
         assert result["should_trigger_analysis"] is True
         assert len(result["tool_results"]) == 3
 
-    @patch("pipeline.agents.monitor.tools.check_fastapi_health")
+    @patch("pipeline.agents.monitor.graph.check_fastapi_health")
     def test_stale_workflow(self, mock_api, tmp_database):
         mock_api.return_value = {"healthy": True, "status_code": 200, "body": {}, "detail": "ok"}
         _insert_run(tmp_database, hours_ago=200)
@@ -120,7 +120,7 @@ class TestRunMonitor:
         assert result["status"] == "stale"
         assert result["should_trigger_analysis"] is False
 
-    @patch("pipeline.agents.monitor.tools.check_fastapi_health")
+    @patch("pipeline.agents.monitor.graph.check_fastapi_health")
     def test_failure_workflow(self, mock_api, tmp_database):
         mock_api.return_value = {"healthy": True, "status_code": 200, "body": {}, "detail": "ok"}
         _insert_run(tmp_database, status="failed", failed=5)
@@ -142,7 +142,7 @@ class TestRunMonitor:
         assert result["pipeline_fresh"] is None
         assert result["api_healthy"] is None
 
-    @patch("pipeline.agents.monitor.tools.check_fastapi_health")
+    @patch("pipeline.agents.monitor.graph.check_fastapi_health")
     def test_no_runs_empty_db(self, mock_api, tmp_database):
         mock_api.return_value = {"healthy": False, "status_code": None, "body": None, "detail": "down"}
         result = run_monitor(tmp_database)

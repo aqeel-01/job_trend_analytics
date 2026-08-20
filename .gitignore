@@ -90,6 +90,7 @@ data/*.db
 data/*.db-*
 data/*.sqlite
 data/*.sqlite3
+data/metrics.jsonl
 logs/
 *.log
 

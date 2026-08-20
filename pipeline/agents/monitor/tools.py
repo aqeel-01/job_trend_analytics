@@ -123,28 +123,40 @@ def check_fastapi_health(
     Returns a dict with keys:
         healthy (bool), status_code (int|None), body (dict|None), detail (str).
     """
+    from pipeline.monitoring.recorder import record_fastapi_health
+
     try:
         resp = httpx.get(f"{base_url}/health", timeout=timeout)
         body = resp.json() if resp.status_code == 200 else None
         healthy = resp.status_code == 200 and (body or {}).get("status") == "ok"
+        detail = f"status={resp.status_code} body={body}"
+        record_fastapi_health(
+            healthy=healthy,
+            detail=detail,
+            status_code=resp.status_code,
+        )
         return {
             "healthy": healthy,
             "status_code": resp.status_code,
             "body": body,
-            "detail": f"status={resp.status_code} body={body}",
+            "detail": detail,
         }
     except httpx.ConnectError:
+        detail = "connection refused — API not running"
+        record_fastapi_health(healthy=False, detail=detail)
         return {
             "healthy": False,
             "status_code": None,
             "body": None,
-            "detail": "connection refused — API not running",
+            "detail": detail,
         }
     except Exception as exc:
         logger.exception("FastAPI health check failed")
+        detail = f"error: {exc}"
+        record_fastapi_health(healthy=False, detail=detail)
         return {
             "healthy": False,
             "status_code": None,
             "body": None,
-            "detail": f"error: {exc}",
+            "detail": detail,
         }

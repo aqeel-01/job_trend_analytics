@@ -70,4 +70,7 @@ class ArbeitnowClient:
         message = f"Failed to fetch Arbeitnow page {page} after {self.max_retries} attempts"
         if last_error is not None:
             message = f"{message}: {last_error}"
+        from pipeline.monitoring.recorder import record_api_failure
+
+        record_api_failure(source="arbeitnow", page=page, detail=message)
         raise APIRequestError(message, page=page)

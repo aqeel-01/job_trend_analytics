@@ -70,6 +70,10 @@ class Settings(BaseSettings):
         default=PROJECT_ROOT / "reports",
         description="Directory for generated weekly reports.",
     )
+    metrics_path: Path = Field(
+        default=PROJECT_ROOT / "data" / "metrics.jsonl",
+        description="Local JSONL file for V1 monitoring metrics.",
+    )
 
     @property
     def database_url(self) -> str:
@@ -90,4 +94,8 @@ def get_settings() -> Settings:
         settings.log_file = PROJECT_ROOT / settings.log_file
     if not settings.skills_taxonomy_path.is_absolute():
         settings.skills_taxonomy_path = PROJECT_ROOT / settings.skills_taxonomy_path
+    if not settings.metrics_path.is_absolute():
+        settings.metrics_path = PROJECT_ROOT / settings.metrics_path
+    if not settings.report_output_dir.is_absolute():
+        settings.report_output_dir = PROJECT_ROOT / settings.report_output_dir
     return settings

@@ -48,6 +48,10 @@ def build_parser() -> argparse.ArgumentParser:
         "run",
         help="Run the full V1 pipeline orchestrator (Monitor → Analyst → Report).",
     )
+    subparsers.add_parser(
+        "metrics",
+        help="Show V1 monitoring metrics summary.",
+    )
 
     return parser
 
@@ -95,6 +99,10 @@ def main(argv: list[str] | None = None) -> int:
     if args.command == "run":
         from pipeline.agents.orchestrator.cli import main as orchestrator_main
         return orchestrator_main([])
+
+    if args.command == "metrics":
+        from pipeline.monitoring.cli import main as metrics_main
+        return metrics_main(["--summary"])
 
     if args.command is None:
         parser.print_help()

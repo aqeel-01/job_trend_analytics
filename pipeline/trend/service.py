@@ -1,7 +1,9 @@
 """Run trend model and persist model-run metadata."""
 
+import time
 from datetime import datetime, timezone
 
+from pipeline.monitoring.recorder import record_model_execution_time
 from pipeline.storage.repositories import ModelRunRepository
 from pipeline.trend.model import TrendModel
 from pipeline.trend.models import TrendModelResult
@@ -23,7 +25,21 @@ class TrendModelService:
         weekly_counts: list[dict[str, int]],
     ) -> tuple[TrendModelResult, int]:
         """Compute trends and store a model_runs row per SRS requirements."""
-        result = self.model.compute(weekly_counts)
+        started = time.monotonic()
+        try:
+            result = self.model.compute(weekly_counts)
+            record_model_execution_time(
+                duration_seconds=time.monotonic() - started,
+                success=True,
+                model_version=result.model_version,
+            )
+        except Exception as exc:
+            record_model_execution_time(
+                duration_seconds=time.monotonic() - started,
+                success=False,
+                detail=str(exc),
+            )
+            raise
 
         total_mentions = sum(
             score.current_mentions for score in result.skills

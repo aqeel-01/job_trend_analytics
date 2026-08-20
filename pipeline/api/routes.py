@@ -51,7 +51,11 @@ def _get_result(db: Database, model: TrendModel) -> TrendModelResult:
 @router.get("/health", response_model=HealthResponse, tags=["system"])
 def health() -> HealthResponse:
     """Liveness check."""
-    return HealthResponse(status="ok", version=__version__)
+    from pipeline.monitoring.recorder import record_fastapi_health
+
+    response = HealthResponse(status="ok", version=__version__)
+    record_fastapi_health(healthy=True, detail="ok", status_code=200)
+    return response
 
 
 @router.get("/model-info", response_model=ModelInfoResponse, tags=["system"])

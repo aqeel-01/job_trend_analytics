@@ -61,6 +61,12 @@ def build_report_writer_graph(
             f"issues={result['issues']}" if result["issues"] else "ok",
         ))
         if not result["valid"]:
+            from pipeline.monitoring.recorder import record_report_generation
+
+            record_report_generation(
+                success=False,
+                detail="; ".join(result["issues"]),
+            )
             return {
                 "status": "invalid_input",
                 "validation_issues": result["issues"],
@@ -134,6 +140,14 @@ def build_report_writer_graph(
             limitations=limitations,
             llm_model_used=model_name if not is_fallback else "fallback (no LLM)",
             raw_llm_response=llm_text,
+        )
+
+        from pipeline.monitoring.recorder import record_report_generation
+
+        record_report_generation(
+            success=True,
+            fallback=is_fallback,
+            detail="fallback" if is_fallback else "llm",
         )
 
         return {

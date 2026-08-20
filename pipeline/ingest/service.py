@@ -1,12 +1,14 @@
 """Orchestrates fetching, normalization, and storage of job postings."""
 
 import logging
+import time
 from datetime import datetime, timezone
 
 from pipeline.ingest.client import JobBoardClient
 from pipeline.ingest.exceptions import APIRequestError, NormalizationError
 from pipeline.ingest.models import IngestionResult
 from pipeline.ingest.normalizer import normalize_arbeitnow_job
+from pipeline.monitoring.recorder import record_ingestion_run
 from pipeline.storage.database import Database
 from pipeline.storage.repositories import JobRepository, PipelineRunRepository
 
@@ -31,6 +33,7 @@ class IngestionService:
     def run(self, max_pages: int | None = None) -> IngestionResult:
         """Execute a full ingestion run with optional page limit."""
         started_at = datetime.now(timezone.utc)
+        started_monotonic = time.monotonic()
         result = IngestionResult()
         page = 1
 
@@ -97,6 +100,15 @@ class IngestionService:
             started_at,
             completed_at,
             result,
+        )
+
+        record_ingestion_run(
+            latency_seconds=time.monotonic() - started_monotonic,
+            jobs_collected=result.records_fetched,
+            jobs_inserted=result.records_inserted,
+            jobs_duplicates=result.records_duplicates,
+            jobs_failed=result.records_failed,
+            status=result.status,
         )
 
         logger.info(

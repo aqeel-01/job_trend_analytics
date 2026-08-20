@@ -94,15 +94,21 @@ def preprocess_description(text: str | None) -> str:
     3. Normalize Unicode (NFKC).
     4. Collapse whitespace and trim.
     """
-    if text is None:
-        return ""
+    try:
+        if text is None:
+            return ""
 
-    if not isinstance(text, str):
-        text = str(text)
+        if not isinstance(text, str):
+            text = str(text)
 
-    if not text:
-        return ""
+        if not text:
+            return ""
 
-    without_html = _strip_html(text)
-    normalized = _normalize_unicode(without_html)
-    return _normalize_whitespace(normalized)
+        without_html = _strip_html(text)
+        normalized = _normalize_unicode(without_html)
+        return _normalize_whitespace(normalized)
+    except Exception as exc:
+        from pipeline.monitoring.recorder import record_preprocessing_failure
+
+        record_preprocessing_failure(detail=str(exc))
+        raise

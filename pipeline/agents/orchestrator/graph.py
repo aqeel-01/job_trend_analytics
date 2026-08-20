@@ -126,22 +126,34 @@ def build_orchestrator_graph(database: Database) -> StateGraph:
         if monitor.get("status") == "error":
             final_status = "monitor_error"
             error = monitor.get("error")
+            from pipeline.monitoring.recorder import record_agent_failure
+
+            record_agent_failure(agent="monitor", detail=error)
         elif not monitor.get("should_trigger_analysis"):
             final_status = f"skipped:{monitor.get('status', 'unknown')}"
             error = None
         elif analyst and analyst.get("status") == "error":
             final_status = "analyst_error"
             error = analyst.get("error")
+            from pipeline.monitoring.recorder import record_agent_failure
+
+            record_agent_failure(agent="analyst", detail=error)
         elif rw and rw.get("status") in ("completed", "completed_fallback"):
             final_status = "completed"
             error = None
         elif rw and rw.get("status") == "invalid_input":
             final_status = "report_writer_error"
             error = rw.get("error")
+            from pipeline.monitoring.recorder import record_agent_failure
+
+            record_agent_failure(agent="report_writer", detail=error)
         else:
             final_status = "completed_partial"
             error = state.get("error")
+            if error:
+                from pipeline.monitoring.recorder import record_agent_failure
 
+                record_agent_failure(agent="orchestrator", detail=error)
         run_id = agent_repo.create(
             started_at=datetime.fromisoformat(started_str),
             completed_at=now,

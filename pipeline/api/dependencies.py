@@ -1,8 +1,10 @@
 """FastAPI dependency providers for the V1 API."""
 
+import time
 from functools import lru_cache
 
 from pipeline.config.settings import get_settings
+from pipeline.monitoring.recorder import record_model_execution_time
 from pipeline.storage.database import Database
 from pipeline.trend.model import TrendModel
 from pipeline.trend.models import TrendModelResult
@@ -61,4 +63,19 @@ def _load_weekly_counts(database: Database) -> list[dict[str, int]]:
 def compute_trend(database: Database, model: TrendModel) -> TrendModelResult:
     """Load weekly counts from DB and run the trend model."""
     weekly = _load_weekly_counts(database)
-    return model.compute(weekly)
+    started = time.monotonic()
+    try:
+        result = model.compute(weekly)
+        record_model_execution_time(
+            duration_seconds=time.monotonic() - started,
+            success=True,
+            model_version=result.model_version,
+        )
+        return result
+    except Exception as exc:
+        record_model_execution_time(
+            duration_seconds=time.monotonic() - started,
+            success=False,
+            detail=str(exc),
+        )
+        raise
