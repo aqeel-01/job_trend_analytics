@@ -27,6 +27,7 @@ class MonitorStateDict(TypedDict, total=False):
     api_healthy: bool | None
     new_data_exists: bool | None
     ingestion_failure: bool | None
+    pipeline_check_error: bool | None
     last_run_at: str | None
     job_count: int
     skill_link_count: int
@@ -42,14 +43,28 @@ def evaluate_node(state: MonitorStateDict) -> MonitorStateDict:
     db_ok = state.get("db_healthy", False)
     fresh = state.get("pipeline_fresh", False)
     failure = state.get("ingestion_failure", False)
+    check_error = state.get("pipeline_check_error", False)
+    api_ok = state.get("api_healthy", False)
     new_data = state.get("new_data_exists", False)
 
     if not db_ok:
         return {"status": "error", "error": "database unhealthy", "should_trigger_analysis": False}
+    if check_error:
+        return {
+            "status": "error",
+            "error": "pipeline status check failed",
+            "should_trigger_analysis": False,
+        }
     if failure:
         return {"status": "failure_detected", "error": "ingestion failure detected", "should_trigger_analysis": False}
     if not fresh:
         return {"status": "stale", "should_trigger_analysis": False}
+    if not api_ok:
+        return {
+            "status": "error",
+            "error": "FastAPI model-serving layer is not healthy",
+            "should_trigger_analysis": False,
+        }
 
     should_trigger = new_data
     status = "analysis_triggered" if should_trigger else "healthy"
@@ -87,9 +102,10 @@ def build_monitor_graph(database: Database) -> StateGraph:
         threshold = state.get("freshness_threshold_hours", 168.0)
         result = check_pipeline_status(database, freshness_threshold_hours=threshold)
         tool_results = list(state.get("tool_results", []))
+        check_error = bool(result.get("check_error"))
         tool_results.append({
             "tool": "check_pipeline_status",
-            "success": result["fresh"] and not result["ingestion_failure"],
+            "success": (not check_error) and result["fresh"] and not result["ingestion_failure"],
             "detail": result["detail"],
             "checked_at": datetime.now().isoformat(),
         })
@@ -97,6 +113,7 @@ def build_monitor_graph(database: Database) -> StateGraph:
             "pipeline_fresh": result["fresh"],
             "new_data_exists": result["new_data_exists"],
             "ingestion_failure": result["ingestion_failure"],
+            "pipeline_check_error": check_error,
             "last_run_at": result["last_run_at"],
             "job_count": result["job_count"],
             "skill_link_count": result["skill_link_count"],
@@ -154,6 +171,7 @@ def run_monitor(
         "api_healthy": None,
         "new_data_exists": None,
         "ingestion_failure": None,
+        "pipeline_check_error": None,
         "last_run_at": None,
         "job_count": 0,
         "skill_link_count": 0,

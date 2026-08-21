@@ -90,6 +90,22 @@ class TestCheckPipelineStatus:
         result = check_pipeline_status(tmp_database)
         assert result["new_data_exists"] is False
 
+    def test_check_error_does_not_look_like_ingestion_failure(self):
+        from unittest.mock import MagicMock
+
+        bad_db = MagicMock()
+        bad_db.connect.side_effect = Exception("disk I/O error")
+        # JobRepository etc. will fail when constructing/using
+        from pipeline.storage.repositories import JobRepository
+
+        with patch(
+            "pipeline.agents.monitor.tools.JobRepository",
+            side_effect=Exception("boom"),
+        ):
+            result = check_pipeline_status(bad_db)
+        assert result["check_error"] is True
+        assert result["ingestion_failure"] is False
+
 
 # -- check_fastapi_health ----------------------------------------------------
 

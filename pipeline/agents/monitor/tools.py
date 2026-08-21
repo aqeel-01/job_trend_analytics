@@ -57,8 +57,8 @@ def check_pipeline_status(
 
     Returns a dict with keys:
         fresh (bool), new_data_exists (bool), ingestion_failure (bool),
-        last_run_at (str|None), job_count (int), skill_link_count (int),
-        detail (str).
+        check_error (bool), last_run_at (str|None), job_count (int),
+        skill_link_count (int), detail (str).
     """
     try:
         job_repo = JobRepository(database)
@@ -96,6 +96,7 @@ def check_pipeline_status(
             "fresh": fresh,
             "new_data_exists": new_data,
             "ingestion_failure": failure,
+            "check_error": False,
             "last_run_at": last_run_at,
             "job_count": job_count,
             "skill_link_count": skill_link_count,
@@ -106,7 +107,8 @@ def check_pipeline_status(
         return {
             "fresh": False,
             "new_data_exists": False,
-            "ingestion_failure": True,
+            "ingestion_failure": False,
+            "check_error": True,
             "last_run_at": None,
             "job_count": 0,
             "skill_link_count": 0,

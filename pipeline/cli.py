@@ -28,30 +28,19 @@ def build_parser() -> argparse.ArgumentParser:
     subparsers = parser.add_subparsers(dest="command", help="Available commands")
 
     subparsers.add_parser("info", help="Show application configuration summary.")
-    subparsers.add_parser(
-        "extract",
-        help="Extract skills from stored jobs and populate job_skills table.",
-    )
-    subparsers.add_parser(
-        "monitor",
-        help="Run the V1 Monitor Agent workflow.",
-    )
-    subparsers.add_parser(
-        "analyst",
-        help="Run the V1 Analyst Agent workflow.",
-    )
-    subparsers.add_parser(
-        "report",
-        help="Run the V1 Report Writer Agent workflow.",
-    )
-    subparsers.add_parser(
-        "run",
-        help="Run the full V1 pipeline orchestrator (Monitor → Analyst → Report).",
-    )
-    subparsers.add_parser(
-        "metrics",
-        help="Show V1 monitoring metrics summary.",
-    )
+
+    # Delegated commands: disable local --help so flags (including --help) are
+    # forwarded to the subcommand CLI via parse_known_args.
+    for name, help_text in (
+        ("extract", "Extract skills from stored jobs and populate job_skills table."),
+        ("monitor", "Run the V1 Monitor Agent workflow."),
+        ("analyst", "Run the V1 Analyst Agent workflow."),
+        ("report", "Run the V1 Report Writer Agent workflow."),
+        ("run", "Run the full V1 pipeline orchestrator (Monitor → Analyst → Report)."),
+        ("metrics", "Show V1 monitoring metrics summary."),
+        ("retrain", "Detect new data, retrain the V1 trend model, and compare versions."),
+    ):
+        subparsers.add_parser(name, help=help_text, add_help=False)
 
     return parser
 
@@ -64,12 +53,19 @@ def cmd_info() -> None:
     logger.info("Database path: %s", settings.database_path)
     logger.info("Database URL: %s", settings.database_url)
     logger.info("Log level: %s", settings.log_level)
+    logger.info("Ollama URL: %s", settings.ollama_base_url)
+    logger.info("Ollama model: %s", settings.ollama_model)
+    logger.info("Report output dir: %s", settings.report_output_dir)
 
 
 def main(argv: list[str] | None = None) -> int:
-    """CLI entry point."""
+    """CLI entry point.
+
+    Unknown args after the subcommand are forwarded to that subcommand's CLI
+    (e.g. ``pipeline report --ollama-model deepseek-r1:7b``).
+    """
     parser = build_parser()
-    args = parser.parse_args(argv)
+    args, remaining = parser.parse_known_args(argv)
 
     settings = get_settings()
     if args.log_level:
@@ -82,27 +78,32 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.command == "extract":
         from pipeline.extraction.cli import main as extract_main
-        return extract_main([])
+        return extract_main(remaining)
 
     if args.command == "monitor":
         from pipeline.agents.monitor.cli import main as monitor_main
-        return monitor_main([])
+        return monitor_main(remaining)
 
     if args.command == "analyst":
         from pipeline.agents.analyst.cli import main as analyst_main
-        return analyst_main([])
+        return analyst_main(remaining)
 
     if args.command == "report":
         from pipeline.agents.report_writer.cli import main as report_main
-        return report_main([])
+        return report_main(remaining)
 
     if args.command == "run":
         from pipeline.agents.orchestrator.cli import main as orchestrator_main
-        return orchestrator_main([])
+        return orchestrator_main(remaining)
 
     if args.command == "metrics":
         from pipeline.monitoring.cli import main as metrics_main
-        return metrics_main(["--summary"])
+        # Default to summary when no args provided; otherwise forward flags.
+        return metrics_main(remaining if remaining else ["--summary"])
+
+    if args.command == "retrain":
+        from pipeline.retraining.cli import main as retrain_main
+        return retrain_main(remaining)
 
     if args.command is None:
         parser.print_help()

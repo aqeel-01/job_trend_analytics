@@ -1,10 +1,10 @@
 """Run trend model and persist model-run metadata."""
 
 import time
-from datetime import datetime, timezone
 
 from pipeline.monitoring.recorder import record_model_execution_time
 from pipeline.storage.repositories import ModelRunRepository
+from pipeline.trend.metrics import build_evaluation_metrics
 from pipeline.trend.model import TrendModel
 from pipeline.trend.models import TrendModelResult
 
@@ -41,9 +41,7 @@ class TrendModelService:
             )
             raise
 
-        total_mentions = sum(
-            score.current_mentions for score in result.skills
-        )
+        total_mentions = sum(sum(period.values()) for period in weekly_counts)
         run_id = self.model_run_repository.create(
             model_version=result.model_version,
             trained_at=result.generated_at,
@@ -55,15 +53,7 @@ class TrendModelService:
                 "z_falling_threshold": self.model.z_falling_threshold,
                 "period_count": result.period_count,
             },
-            evaluation_metrics={
-                "skills_ranked": len(result.skills),
-                "rising_skills": sum(
-                    1 for skill in result.skills if skill.trend.value == "rising"
-                ),
-                "falling_skills": sum(
-                    1 for skill in result.skills if skill.trend.value == "falling"
-                ),
-            },
+            evaluation_metrics=build_evaluation_metrics(result),
             status="completed",
         )
         return result, run_id

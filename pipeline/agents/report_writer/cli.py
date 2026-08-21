@@ -6,6 +6,7 @@ import logging
 from pathlib import Path
 
 from pipeline import initialize
+from pipeline.agents.analyst.cli import DEFAULT_ANALYST_REPORT_NAME
 from pipeline.agents.report_writer.graph import run_report_writer
 from pipeline.config.settings import get_settings
 
@@ -20,11 +21,22 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--analyst-report",
         type=str,
-        required=True,
-        help="Path to the analyst report JSON file.",
+        default=None,
+        help=(
+            "Path to the analyst report JSON file "
+            f"(default: reports/{DEFAULT_ANALYST_REPORT_NAME})."
+        ),
     )
-    parser.add_argument("--ollama-model", default=None)
-    parser.add_argument("--ollama-url", default=None)
+    parser.add_argument(
+        "--ollama-model",
+        default=None,
+        help="Ollama model name (default: JOB_MARKET_OLLAMA_MODEL / settings).",
+    )
+    parser.add_argument(
+        "--ollama-url",
+        default=None,
+        help="Ollama base URL (default: JOB_MARKET_OLLAMA_BASE_URL / http://localhost:11434).",
+    )
     parser.add_argument("--output", default=None, help="Path to write the markdown report.")
     parser.add_argument("--log-level", default=None)
     return parser
@@ -39,12 +51,18 @@ def main(argv: list[str] | None = None) -> int:
         settings.log_level = args.log_level
     initialize(settings)
 
-    report_path = Path(args.analyst_report)
+    report_path = Path(args.analyst_report) if args.analyst_report else (
+        settings.report_output_dir / DEFAULT_ANALYST_REPORT_NAME
+    )
     if not report_path.exists():
-        logger.error("Analyst report not found: %s", report_path)
+        logger.error(
+            "Analyst report not found: %s — run `python -m pipeline analyst` first "
+            "or pass --analyst-report PATH",
+            report_path,
+        )
         return 1
 
-    with open(report_path) as f:
+    with open(report_path, encoding="utf-8") as f:
         analyst_report = json.load(f)
 
     model = args.ollama_model or settings.ollama_model

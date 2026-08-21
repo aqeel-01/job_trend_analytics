@@ -4,6 +4,7 @@ import sqlite3
 from pathlib import Path
 
 from pipeline.storage.schema import (
+    COLUMN_MIGRATIONS_V2,
     MIGRATIONS,
     REQUIRED_TABLES,
     SCHEMA_MIGRATIONS_TABLE,
@@ -46,6 +47,11 @@ class Database:
                     "INSERT INTO schema_migrations (version) VALUES (?)",
                     (version,),
                 )
+            self._apply_column_migrations(conn, COLUMN_MIGRATIONS_V2)
+            conn.execute(
+                "INSERT INTO schema_migrations (version) VALUES (?)",
+                (2,),
+            )
             conn.commit()
             return
 
@@ -57,6 +63,14 @@ class Database:
                 "INSERT INTO schema_migrations (version) VALUES (?)",
                 (version,),
             )
+
+        if current_version < 2:
+            self._apply_column_migrations(conn, COLUMN_MIGRATIONS_V2)
+            conn.execute(
+                "INSERT INTO schema_migrations (version) VALUES (?)",
+                (2,),
+            )
+
         conn.commit()
 
     def schema_version(self) -> int | None:
@@ -75,6 +89,39 @@ class Database:
     def has_required_tables(self) -> bool:
         """Return True when all V1 tables exist."""
         return set(REQUIRED_TABLES).issubset(self.table_names())
+
+    @staticmethod
+    def _table_columns(conn: sqlite3.Connection, table: str) -> set[str]:
+        rows = conn.execute(f"PRAGMA table_info({table})").fetchall()
+        return {row["name"] for row in rows}
+
+    def _apply_column_migrations(
+        self,
+        conn: sqlite3.Connection,
+        migrations: tuple[tuple[str, str, str], ...],
+    ) -> None:
+        """Add missing columns idempotently (safe for early V1 databases)."""
+        existing_tables = {
+            row["name"]
+            for row in conn.execute(
+                "SELECT name FROM sqlite_master WHERE type = 'table'"
+            ).fetchall()
+        }
+        for table, column, definition in migrations:
+            if table not in existing_tables:
+                continue
+            existing = self._table_columns(conn, table)
+            if column in existing:
+                continue
+            conn.execute(f"ALTER TABLE {table} ADD COLUMN {column} {definition}")
+            if table == "pipeline_runs" and column == "created_at":
+                conn.execute(
+                    """
+                    UPDATE pipeline_runs
+                    SET created_at = COALESCE(started_at, datetime('now'))
+                    WHERE created_at IS NULL
+                    """
+                )
 
     @staticmethod
     def _get_schema_version(conn: sqlite3.Connection) -> int | None:

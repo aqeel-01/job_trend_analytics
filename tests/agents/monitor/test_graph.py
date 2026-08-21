@@ -42,6 +42,7 @@ class TestEvaluateNode:
         state: MonitorStateDict = {
             "db_healthy": True,
             "pipeline_fresh": True,
+            "api_healthy": True,
             "ingestion_failure": False,
             "new_data_exists": True,
         }
@@ -53,6 +54,7 @@ class TestEvaluateNode:
         state: MonitorStateDict = {
             "db_healthy": True,
             "pipeline_fresh": True,
+            "api_healthy": True,
             "ingestion_failure": False,
             "new_data_exists": False,
         }
@@ -64,6 +66,7 @@ class TestEvaluateNode:
         state: MonitorStateDict = {
             "db_healthy": False,
             "pipeline_fresh": True,
+            "api_healthy": True,
             "ingestion_failure": False,
             "new_data_exists": True,
         }
@@ -71,10 +74,37 @@ class TestEvaluateNode:
         assert update["status"] == "error"
         assert update["should_trigger_analysis"] is False
 
+    def test_pipeline_check_error_results_in_error(self):
+        state: MonitorStateDict = {
+            "db_healthy": True,
+            "pipeline_fresh": False,
+            "api_healthy": True,
+            "ingestion_failure": False,
+            "pipeline_check_error": True,
+            "new_data_exists": False,
+        }
+        update = evaluate_node(state)
+        assert update["status"] == "error"
+        assert update["should_trigger_analysis"] is False
+
+    def test_api_unhealthy_blocks_analysis(self):
+        state: MonitorStateDict = {
+            "db_healthy": True,
+            "pipeline_fresh": True,
+            "api_healthy": False,
+            "ingestion_failure": False,
+            "new_data_exists": True,
+        }
+        update = evaluate_node(state)
+        assert update["status"] == "error"
+        assert update["should_trigger_analysis"] is False
+        assert "FastAPI" in update["error"]
+
     def test_failure_detected(self):
         state: MonitorStateDict = {
             "db_healthy": True,
             "pipeline_fresh": True,
+            "api_healthy": True,
             "ingestion_failure": True,
             "new_data_exists": True,
         }
@@ -85,6 +115,7 @@ class TestEvaluateNode:
         state: MonitorStateDict = {
             "db_healthy": True,
             "pipeline_fresh": False,
+            "api_healthy": True,
             "ingestion_failure": False,
             "new_data_exists": False,
         }

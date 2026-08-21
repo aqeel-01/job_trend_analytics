@@ -26,6 +26,22 @@ def _str_to_datetime(value: str | None) -> datetime | None:
     return datetime.fromisoformat(value)
 
 
+def _row_value(row, key: str, default=None):
+    """Read a sqlite3.Row value safely when a column may be absent."""
+    try:
+        return row[key]
+    except (IndexError, KeyError):
+        return default
+
+
+def _row_created_at(row, fallback_key: str = "started_at") -> datetime | None:
+    """Resolve created_at, falling back to another timestamp column if needed."""
+    value = _row_value(row, "created_at")
+    if value is None:
+        value = _row_value(row, fallback_key)
+    return _str_to_datetime(value)
+
+
 def _bool_to_remote_int(value: bool | None) -> int | None:
     if value is None:
         return None
@@ -434,7 +450,7 @@ class PipelineRunRepository:
             records_inserted=int(row["records_inserted"]),
             records_failed=int(row["records_failed"]),
             error_message=row["error_message"],
-            created_at=_str_to_datetime(row["created_at"]),
+            created_at=_row_created_at(row, fallback_key="started_at"),
         )
 
     def list_runs(self, limit: int = 50, offset: int = 0) -> list[StoredPipelineRun]:
@@ -458,7 +474,7 @@ class PipelineRunRepository:
                 records_inserted=int(row["records_inserted"]),
                 records_failed=int(row["records_failed"]),
                 error_message=row["error_message"],
-                created_at=_str_to_datetime(row["created_at"]),
+                created_at=_row_created_at(row, fallback_key="started_at"),
             )
             for row in rows
         ]
@@ -550,6 +566,36 @@ class ModelRunRepository:
             )
             for row in rows
         ]
+
+    def get_latest(self) -> StoredModelRun | None:
+        """Return the most recently trained model run, if any."""
+        runs = self.list_runs(limit=1)
+        return runs[0] if runs else None
+
+    def get_by_version(self, model_version: str) -> StoredModelRun | None:
+        """Return the newest run for a given model version string."""
+        conn = self.database.connect()
+        row = conn.execute(
+            """
+            SELECT * FROM model_runs
+            WHERE model_version = ?
+            ORDER BY trained_at DESC, id DESC
+            LIMIT 1
+            """,
+            (model_version,),
+        ).fetchone()
+        if row is None:
+            return None
+        return StoredModelRun(
+            id=int(row["id"]),
+            model_version=row["model_version"],
+            trained_at=_str_to_datetime(row["trained_at"]),
+            training_dataset_size=row["training_dataset_size"],
+            model_parameters=row["model_parameters"],
+            evaluation_metrics=row["evaluation_metrics"],
+            status=row["status"],
+            created_at=_str_to_datetime(row["created_at"]),
+        )
 
 
 class AgentRunRepository:

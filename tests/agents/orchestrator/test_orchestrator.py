@@ -141,7 +141,7 @@ class TestFullPipelineSuccess:
     @patch("pipeline.agents.report_writer.graph.generate_with_ollama", side_effect=_mock_ollama_success)
     @patch("pipeline.agents.analyst.graph.fetch_model_info", side_effect=_mock_analyst_model_info)
     @patch("pipeline.agents.analyst.graph.fetch_trending_skills", side_effect=_mock_analyst_trending)
-    @patch("pipeline.agents.monitor.tools.check_fastapi_health", side_effect=_mock_monitor_api_healthy)
+    @patch("pipeline.agents.monitor.graph.check_fastapi_health", side_effect=_mock_monitor_api_healthy)
     def test_end_to_end_completed(self, m_api, m_trends, m_info, m_llm, tmp_database, tmp_path):
         _insert_fresh_run(tmp_database, hours_ago=2)
 
@@ -161,7 +161,7 @@ class TestFullPipelineSuccess:
     @patch("pipeline.agents.report_writer.graph.generate_with_ollama", side_effect=_mock_ollama_success)
     @patch("pipeline.agents.analyst.graph.fetch_model_info", side_effect=_mock_analyst_model_info)
     @patch("pipeline.agents.analyst.graph.fetch_trending_skills", side_effect=_mock_analyst_trending)
-    @patch("pipeline.agents.monitor.tools.check_fastapi_health", side_effect=_mock_monitor_api_healthy)
+    @patch("pipeline.agents.monitor.graph.check_fastapi_health", side_effect=_mock_monitor_api_healthy)
     def test_agent_run_recorded_in_sqlite(self, m_api, m_trends, m_info, m_llm, tmp_database, tmp_path):
         _insert_fresh_run(tmp_database)
         result = run_orchestrator(
@@ -180,7 +180,7 @@ class TestFullPipelineSuccess:
     @patch("pipeline.agents.report_writer.graph.generate_with_ollama", side_effect=_mock_ollama_success)
     @patch("pipeline.agents.analyst.graph.fetch_model_info", side_effect=_mock_analyst_model_info)
     @patch("pipeline.agents.analyst.graph.fetch_trending_skills", side_effect=_mock_analyst_trending)
-    @patch("pipeline.agents.monitor.tools.check_fastapi_health", side_effect=_mock_monitor_api_healthy)
+    @patch("pipeline.agents.monitor.graph.check_fastapi_health", side_effect=_mock_monitor_api_healthy)
     def test_report_file_written(self, m_api, m_trends, m_info, m_llm, tmp_database, tmp_path):
         _insert_fresh_run(tmp_database)
         result = run_orchestrator(
@@ -199,7 +199,7 @@ class TestFullPipelineSuccess:
     @patch("pipeline.agents.report_writer.graph.generate_with_ollama", side_effect=_mock_ollama_success)
     @patch("pipeline.agents.analyst.graph.fetch_model_info", side_effect=_mock_analyst_model_info)
     @patch("pipeline.agents.analyst.graph.fetch_trending_skills", side_effect=_mock_analyst_trending)
-    @patch("pipeline.agents.monitor.tools.check_fastapi_health", side_effect=_mock_monitor_api_healthy)
+    @patch("pipeline.agents.monitor.graph.check_fastapi_health", side_effect=_mock_monitor_api_healthy)
     def test_tool_calls_counted(self, m_api, m_trends, m_info, m_llm, tmp_database, tmp_path):
         _insert_fresh_run(tmp_database)
         result = run_orchestrator(
@@ -216,7 +216,7 @@ class TestFullPipelineSuccess:
 
 
 class TestMonitorSkipsAnalysis:
-    @patch("pipeline.agents.monitor.tools.check_fastapi_health", side_effect=_mock_monitor_api_healthy)
+    @patch("pipeline.agents.monitor.graph.check_fastapi_health", side_effect=_mock_monitor_api_healthy)
     def test_stale_data_skips_analyst(self, m_api, tmp_database, tmp_path):
         _insert_fresh_run(tmp_database, hours_ago=200)
 
@@ -257,7 +257,7 @@ class TestMonitorSkipsAnalysis:
 
 class TestFailurePropagation:
     @patch("pipeline.agents.analyst.graph.fetch_trending_skills")
-    @patch("pipeline.agents.monitor.tools.check_fastapi_health", side_effect=_mock_monitor_api_healthy)
+    @patch("pipeline.agents.monitor.graph.check_fastapi_health", side_effect=_mock_monitor_api_healthy)
     def test_analyst_failure_recorded(self, m_api, m_trends, tmp_database, tmp_path):
         _insert_fresh_run(tmp_database)
         m_trends.return_value = {"success": False, "data": None, "detail": "API down"}
@@ -278,7 +278,7 @@ class TestFailurePropagation:
     @patch("pipeline.agents.report_writer.graph.generate_with_ollama", side_effect=_mock_ollama_failure)
     @patch("pipeline.agents.analyst.graph.fetch_model_info", side_effect=_mock_analyst_model_info)
     @patch("pipeline.agents.analyst.graph.fetch_trending_skills", side_effect=_mock_analyst_trending)
-    @patch("pipeline.agents.monitor.tools.check_fastapi_health", side_effect=_mock_monitor_api_healthy)
+    @patch("pipeline.agents.monitor.graph.check_fastapi_health", side_effect=_mock_monitor_api_healthy)
     def test_llm_failure_uses_fallback(self, m_api, m_trends, m_info, m_llm, tmp_database, tmp_path):
         _insert_fresh_run(tmp_database)
         result = run_orchestrator(

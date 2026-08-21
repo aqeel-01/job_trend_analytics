@@ -3,12 +3,15 @@
 import argparse
 import json
 import logging
+from pathlib import Path
 
 from pipeline import initialize
 from pipeline.agents.analyst.graph import run_analyst
 from pipeline.config.settings import get_settings
 
 logger = logging.getLogger(__name__)
+
+DEFAULT_ANALYST_REPORT_NAME = "latest_analyst.json"
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -26,6 +29,11 @@ def build_parser() -> argparse.ArgumentParser:
         type=int,
         default=200,
         help="Max skills to retrieve from the trending endpoint.",
+    )
+    parser.add_argument(
+        "--output",
+        default=None,
+        help="Path to write the analyst report JSON (default: reports/latest_analyst.json).",
     )
     parser.add_argument("--log-level", default=None)
     return parser
@@ -52,6 +60,15 @@ def main(argv: list[str] | None = None) -> int:
                      len(report.get("weak_signals", [])),
                      len(report.get("top_risers", [])),
                      len(report.get("top_fallers", [])))
+        settings.report_output_dir.mkdir(parents=True, exist_ok=True)
+        output_path = Path(args.output) if args.output else (
+            settings.report_output_dir / DEFAULT_ANALYST_REPORT_NAME
+        )
+        output_path.write_text(
+            json.dumps(report, indent=2, default=str),
+            encoding="utf-8",
+        )
+        logger.info("Analyst report written to %s", output_path)
         print(json.dumps(report, indent=2, default=str))
     else:
         logger.warning("  error: %s", result.get("error"))

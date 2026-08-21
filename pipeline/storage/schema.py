@@ -1,6 +1,6 @@
 """SQLite schema definitions and migration version for V1."""
 
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
 
 SCHEMA_MIGRATIONS_TABLE = """
 CREATE TABLE IF NOT EXISTS schema_migrations (
@@ -88,6 +88,12 @@ CREATE TABLE IF NOT EXISTS agent_runs (
     created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 """
+
+# Idempotent column repairs for databases created from early V1 schema drafts.
+# ALTER TABLE cannot use non-constant defaults (e.g. datetime('now')) in SQLite.
+COLUMN_MIGRATIONS_V2: tuple[tuple[str, str, str], ...] = (
+    ("pipeline_runs", "created_at", "TEXT"),
+)
 
 MIGRATIONS: dict[int, str] = {
     1: MIGRATION_V1,

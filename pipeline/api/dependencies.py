@@ -6,6 +6,7 @@ from functools import lru_cache
 from pipeline.config.settings import get_settings
 from pipeline.monitoring.recorder import record_model_execution_time
 from pipeline.storage.database import Database
+from pipeline.trend.data import load_weekly_counts
 from pipeline.trend.model import TrendModel
 from pipeline.trend.models import TrendModelResult
 
@@ -29,35 +30,8 @@ def get_trend_model() -> TrendModel:
 
 
 def _load_weekly_counts(database: Database) -> list[dict[str, int]]:
-    """
-    Aggregate job_skills into per-ISO-week skill mention frequencies.
-
-    Queries join job_skills → skills → jobs, grouping by the
-    year-week (strftime '%Y-%W') of each job's ingestion timestamp.
-    """
-    conn = database.connect()
-    rows = conn.execute(
-        """
-        SELECT
-            strftime('%Y-%W', j.ingested_at) AS week,
-            s.canonical_name                  AS skill,
-            COUNT(*)                          AS cnt
-        FROM job_skills js
-        JOIN jobs   j ON js.job_id   = j.id
-        JOIN skills s ON js.skill_id = s.id
-        GROUP BY week, s.canonical_name
-        ORDER BY week ASC
-        """
-    ).fetchall()
-
-    weeks: dict[str, dict[str, int]] = {}
-    for row in rows:
-        week = row["week"]
-        skill = row["skill"]
-        cnt = int(row["cnt"])
-        weeks.setdefault(week, {})[skill] = cnt
-
-    return [counts for counts in weeks.values()]
+    """Aggregate job_skills into per-ISO-week skill mention frequencies."""
+    return load_weekly_counts(database)
 
 
 def compute_trend(database: Database, model: TrendModel) -> TrendModelResult:

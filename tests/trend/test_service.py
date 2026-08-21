@@ -20,7 +20,8 @@ def test_model_run_metadata_stored(database) -> None:
     stored = model_run_repository.get_by_id(run_id)
     assert stored is not None
     assert stored.model_version == "v1.0"
-    assert stored.training_dataset_size == result.skills[0].current_mentions
+    assert stored.training_dataset_size == 10 + 12 + 20
     assert stored.status == "completed"
     assert '"method": "z_score"' in stored.model_parameters
     assert '"skills_ranked": 1' in stored.evaluation_metrics
+    assert '"top_skills"' in stored.evaluation_metrics
